@@ -1,0 +1,28 @@
+{
+    "cursormod.gui.config": "配置菜单",
+    "cursormod.gui.cursorList": "光标配置菜单",
+    "cursormod.gui.configCursor": "光标配置菜单",
+
+    "cursormod.config.xhotspot": "X轴热点",
+    "cursormod.config.yhotspot": "Y轴热点",
+    "cursormod.config.location": "文件位置",
+    "cursormod.config.size": "光标大小",
+    "cursormod.config.dynCursor": "动态光标",
+    "cursormod.config.clickAnim": "点击动画",
+    "cursormod.config.yes": "是",
+    "cursormod.config.no": "否",
+
+    "cursormod.gui.error": "加载光标时出错",
+    "cursormod.gui.animate": "动画",
+    "cursormod.gui.cancel": "取消",
+    "cursormod.gui.default": "默认值",
+
+    "cursormod.cursor.pointer": "指针",
+    "cursormod.cursor.hand": "手形",
+    "cursormod.cursor.hand_grab": "抓取手形",
+    "cursormod.cursor.beam": "光标",
+    "cursormod.cursor.cross": "十字",
+
+    "cursormod.licence": "许可证 %s",
+    "cursormod.authors": "作者 %s"
+} 

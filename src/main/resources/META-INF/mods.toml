@@ -1,0 +1,19 @@
+modLoader="javafml"
+loaderVersion="[37,)"
+license="GNU General Public License 3"
+issueTrackerURL="https://github.com/ate47/CursorMod/issues"
+[[mods]]
+	modId="customcursormod"
+	version="1.3.4"
+	displayName="Custom Cursor Reload"
+	displayURL=""
+	authors="ATE47, KevinFernandezDominguez, PrizOwO"
+	description="Change your cursor."
+
+[[dependencies.customcursormod]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.19.2,1.21)"
+    ordering="NONE"
+    side="BOTH"
+    

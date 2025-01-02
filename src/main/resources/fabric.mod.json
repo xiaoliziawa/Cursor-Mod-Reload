@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "cursormod",
+  "version": "0.0.1",
+
+  "name": "Custom Cursor Mod",
+  "description": "Change your cursor.",
+  "authors": ["ATE47", "KevinFernandezDominguez", "PrizOwO"],
+  "contact": {
+    "homepage": "",
+    "sources": "https://github.com/ate47/CursorMod"
+  },
+
+  "license": "GPL-3",
+  "icon": "assets/cursormod/icon.png",
+
+  "environment": "*",
+  "entrypoints": {
+    "client": ["fr.atesab.customcursormod.fabric.FabricCursorMod"]
+  },
+  "mixins": ["cursormod.mixins.json"],
+
+  "depends": {
+    "fabricloader": ">=0.11.3",
+    "fabric": "*",
+    "minecraft": "1.20.1"
+  },
+  "suggests": {
+    "another-mod": "*"
+  }
+}

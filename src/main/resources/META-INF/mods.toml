@@ -1,0 +1,19 @@
+modLoader="javafml"
+loaderVersion="[37,)"
+license="GNU General Public License 3"
+issueTrackerURL="https://github.com/ate47/CursorMod/issues"
+[[mods]]
+	modId="customcursormod"
+	version="0.0.1"
+	displayName="Custom Cursor Mod"
+	displayURL="https://minecraft.curseforge.com/projects/cursor-mod"
+	authors="ATE47, KevinFernandezDominguez, PrizOwO"
+	description="Change your cursor."
+
+[[dependencies.customcursormod]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.20.1]"
+    ordering="NONE"
+    side="BOTH"
+    

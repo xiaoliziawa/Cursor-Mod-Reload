@@ -5,7 +5,7 @@ issueTrackerURL="https://github.com/ate47/CursorMod/issues"
 [[mods]]
 	modId="customcursormod"
 	version="0.0.1"
-	displayName="Custom Cursor Mod"
+	displayName="Custom Cursor Reload"
 	displayURL="https://minecraft.curseforge.com/projects/cursor-mod"
 	authors="ATE47, KevinFernandezDominguez, PrizOwO"
 	description="Change your cursor."

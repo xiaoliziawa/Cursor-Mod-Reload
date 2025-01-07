@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "customcursormod",
+  "version": "${version}",
+  "name": "CustomCursor",
+  "description": "Change your cursor.",
+  "authors": ["ATE47", "KevinFernandezDominguez", "PrizOwO"],
+  "contact": {},
+  "license": "LGPL-3.0",
+  "icon": "assets/customcursormod/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "fr.atesab.customcursormod.client.CustomcursormodClient"
+    ],
+    "main": [
+      "fr.atesab.customcursormod.Customcursormod"
+    ]
+  },
+  "mixins": [
+    "customcursormod.mixins.json",
+    {
+      "config": "customcursormod.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.4",
+    "fabric": "*",
+    "minecraft": "~1.21"
+  }
+}

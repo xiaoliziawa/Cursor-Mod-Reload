@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "fr.atesab.customcursormod.client.fabric.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "AbstractButtonWidgetMixin",
+    "HandledScreenMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

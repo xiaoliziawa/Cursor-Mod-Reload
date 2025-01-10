@@ -67,7 +67,8 @@ public class FabricCommonScreen extends CommonScreen {
 			context.fill(0, 0, this.width, this.height, 0x60101010);
 		}
 
-		TextRenderer getTextRenderer() {
+		@Override
+		public TextRenderer getTextRenderer() {
 			return textRenderer;
 		}
 	}

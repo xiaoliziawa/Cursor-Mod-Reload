@@ -9,12 +9,14 @@ import fr.atesab.customcursormod.client.common.handler.GuiUtils;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.BufferRenderer;
-import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.render.VertexFormat;
 import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.render.BuiltBuffer;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.gl.ShaderProgram;
+import net.minecraft.client.gl.ShaderProgramKeys;
+import java.util.function.Supplier;
 
 public class FabricGuiUtils extends GuiUtils {
 	private FabricGuiUtils() {
@@ -93,7 +95,7 @@ public class FabricGuiUtils extends GuiUtils {
 		
 		RenderSystem.enableBlend();
 		RenderSystem.defaultBlendFunc();
-		RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+		RenderSystem.setShader(MinecraftClient.getInstance().getShaderLoader().getOrCreateProgram(ShaderProgramKeys.POSITION_COLOR));
 		RenderSystem.blendFuncSeparate(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA,
 				GlStateManager.SrcFactor.ONE, GlStateManager.DstFactor.ZERO);
 		
@@ -127,6 +129,7 @@ public class FabricGuiUtils extends GuiUtils {
 
 	@Override
 	public void setShader(CommonShader shader) {
-		RenderSystem.setShader(shader.getHandle());
+		Supplier<ShaderProgram> shaderSupplier = (Supplier<ShaderProgram>)shader.getHandle();
+		RenderSystem.setShader(shaderSupplier.get());
 	}
 }

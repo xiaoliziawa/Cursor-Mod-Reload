@@ -24,7 +24,7 @@ public class FabricResourceLocationCommon extends ResourceLocationCommon {
 
 	@Override
 	public void bindForSetup() {
-		MinecraftClient.getInstance().getTextureManager().bindTexture(resource);
+		RenderSystem.setShaderTexture(0, resource);
 	}
 
 	@Override

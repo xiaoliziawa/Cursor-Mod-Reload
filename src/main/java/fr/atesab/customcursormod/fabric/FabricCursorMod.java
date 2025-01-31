@@ -13,12 +13,11 @@ import fr.atesab.customcursormod.fabric.FabricCommonScreen.FabricCommonScreenHan
 import fr.atesab.customcursormod.fabric.gui.FabricGuiSelectZone;
 import fr.atesab.customcursormod.fabric.mixin.HandledScreenMixin;
 import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents.ClientStarted;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenMouseEvents;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ChatScreen;
@@ -42,11 +41,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.argument;
-import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
+import static net.minecraft.server.command.CommandManager.literal;
+import static net.minecraft.server.command.CommandManager.argument;
 
-public class FabricCursorMod implements ClientModInitializer, ClientTickEvents.StartTick, ScreenEvents.AfterInit,
-		ScreenEvents.AfterRender, ScreenEvents.AfterTick, ScreenMouseEvents.AfterMouseClick, ClientStarted {
+public class FabricCursorMod implements ClientModInitializer {
 	static {
 		SelectZone.SUPPLIER.forType(GameType.FABRIC,
 				o -> new FabricGuiSelectZone(o.xPosition, o.yPosition, o.width, o.height));
@@ -71,80 +69,88 @@ public class FabricCursorMod implements ClientModInitializer, ClientTickEvents.S
 
 	@Override
 	public void onInitializeClient() {
-		ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> dispatcher.register(literal("cursormod")
-				.then(literal("dynamicCursor").then(argument("dc_value", BoolArgumentType.bool()).executes(c -> {
-					mod.getConfig().dynamicCursor = BoolArgumentType.getBool(c, "dc_value");
-					c.getSource().sendFeedback(Text.translatable("cursormod.config.dynCursor").append(": ")
-							.append(mod.getConfig().dynamicCursor ? yes : no));
-					return 1;
-				})).executes(c -> {
-					c.getSource().sendFeedback(Text.translatable("cursormod.config.dynCursor").append(": ")
-							.append(mod.getConfig().dynamicCursor ? yes : no));
-					return 1;
-				})).then(literal("clickAnimation").then(argument("ca_value", BoolArgumentType.bool()).executes(c -> {
-					mod.getConfig().clickAnimation = BoolArgumentType.getBool(c, "ca_value");
-					c.getSource().sendFeedback(Text.translatable("cursormod.config.clickAnim").append(": ")
-							.append(mod.getConfig().clickAnimation ? yes : no));
-					return 1;
-				})).executes(c -> {
-					c.getSource().sendFeedback(Text.translatable("cursormod.config.clickAnim").append(": ")
-							.append(mod.getConfig().clickAnimation ? yes : no));
-					return 1;
-				})).executes(c -> {
+		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
+			dispatcher.register(literal("cursormod")
+				.then(literal("dynamicCursor")
+					.then(argument("dc_value", BoolArgumentType.bool())
+						.executes(c -> {
+							mod.getConfig().dynamicCursor = BoolArgumentType.getBool(c, "dc_value");
+							c.getSource().sendFeedback(() -> Text.translatable("cursormod.config.dynCursor")
+									.append(": ")
+									.append(mod.getConfig().dynamicCursor ? yes : no), false);
+							return 1;
+						}))
+					.executes(c -> {
+						c.getSource().sendFeedback(() -> Text.translatable("cursormod.config.dynCursor")
+								.append(": ")
+								.append(mod.getConfig().dynamicCursor ? yes : no), false);
+						return 1;
+					}))
+				.then(literal("clickAnimation")
+					.then(argument("ca_value", BoolArgumentType.bool())
+						.executes(c -> {
+							mod.getConfig().clickAnimation = BoolArgumentType.getBool(c, "ca_value");
+							c.getSource().sendFeedback(() -> Text.translatable("cursormod.config.clickAnim")
+									.append(": ")
+									.append(mod.getConfig().clickAnimation ? yes : no), false);
+							return 1;
+						}))
+					.executes(c -> {
+						c.getSource().sendFeedback(() -> Text.translatable("cursormod.config.clickAnim")
+								.append(": ")
+								.append(mod.getConfig().clickAnimation ? yes : no), false);
+						return 1;
+					}))
+				.executes(c -> {
 					mod.waiter.register(GuiConfig.create(CommonScreen.getCurrent()));
 					return 0;
-				})));
-		ScreenEvents.AFTER_INIT.register(this);
-		ClientLifecycleEvents.CLIENT_STARTED.register(this);
-		ClientTickEvents.START_CLIENT_TICK.register(this);
+				}));
+		});
+
+		// 注册事件监听器
+		ClientTickEvents.START_CLIENT_TICK.register(client -> mod.waiter.tick());
+		
+		ClientLifecycleEvents.CLIENT_STARTED.register(client -> {
+			File saveDir = new File(client.runDirectory, "config");
+			try {
+				Files.createDirectories(saveDir.toPath());
+			} catch (IOException e) {
+				throw new RuntimeException("can't create directories: " + saveDir, e);
+			}
+			File save = new File(saveDir, CursorMod.MOD_ID + ".json");
+			mod.getConfig().sync(save);
+			mod.getCursors().values().forEach(CursorConfig::getCursor); // force allocation
+			mod.loadData(client.getWindow().getHandle());
+		});
+
+		// 注册屏幕事件
+		ScreenEvents.BEFORE_INIT.register((client, screen, scaledWidth, scaledHeight) -> {
+			mod.forceNextCursor();
+			
+			ScreenEvents.afterRender(screen).register((screen1, context, mouseX, mouseY, tickDelta) -> {
+				renderScreen(screen1, context, mouseX, mouseY, tickDelta);
+			});
+			
+			ScreenEvents.afterTick(screen).register(screen1 -> {
+				if (!mod.getCursorClicks().isEmpty() && MinecraftClient.getInstance().currentScreen == null) {
+					mod.getCursorClicks().clear();
+				}
+			});
+			
+			ScreenMouseEvents.afterMouseClick(screen).register((screen1, mouseX, mouseY, button) -> {
+				if (button == 0 && mod.getConfig().clickAnimation) {
+					mod.getCursorClicks().add(new CursorClick(mouseX, mouseY));
+				}
+			});
+		});
 	}
 
-	private List<Field[]> getDeclaredField(Class<?> cls) {
-		List<Field[]> l = new ArrayList<>();
-		l.add(cls.getDeclaredFields());
-		while (!cls.equals(Object.class)) {
-			cls = cls.getSuperclass();
-			l.add(cls.getDeclaredFields());
-		}
-		return l;
-	}
-	private boolean isHover(int mouseX, int mouseY, int x, int y, int width, int height) {
-		x = Math.min(x + width, x);
-		y = Math.min(y + height, y);
-		width = Math.abs(width);
-		height = Math.abs(height);
-		return mouseX >= x && mouseX < x + width && mouseY >= y && mouseY < y + height;
-	}
-
-	private boolean isHoverButton(int mouseX, int mouseY, PressableWidget button) {
-		return button != null && button.visible && button.active
-				&& isHover(mouseX, mouseY, button.getX(), button.getY(), button.getWidth(), button.getHeight());
-	}
-
-	private boolean isHoverTextField(int mouseX, int mouseY, TextFieldWidget textField) {
-		return textField != null && textField.isVisible()
-				&& isHover(mouseX, mouseY, textField.getX(), textField.getY(), textField.getWidth(), textField.getHeight());
-	}
-
-	@Override
-	public void afterInit(MinecraftClient client, Screen screen, int scaledWidth, int scaledHeight) {
-		mod.forceNextCursor();
-		ScreenEvents.afterRender(screen).register(this);
-		ScreenEvents.afterTick(screen).register(this);
-		ScreenMouseEvents.afterMouseClick(screen).register(this);
-	}
-
-	public static Slot getSlotUnderMouse(HandledScreen<?> screen) {
-		return ((HandledScreenMixin) screen).getFocusedSlot();
-	}
-
-	@Override
-	public void afterRender(Screen gui, DrawContext context, int mouseX, int mouseY, float tickDelta) {
+	private void renderScreen(Screen gui, DrawContext context, int mouseX, int mouseY, float tickDelta) {
 		if (gui == null)
 			return;
 		CursorType newCursorType = CursorType.POINTER;
 		if (mod.getConfig().dynamicCursor) {
-			if (gui instanceof FabricCommonScreenHandler handle) { // Our menu
+			if (gui instanceof FabricCommonScreenHandler handle) {
 				CommonScreen cs = handle.cs;
 				for (CommonElement o : cs.childrens) {
 					if (!o.isEnable())
@@ -159,8 +165,8 @@ public class FabricCursorMod implements ClientModInitializer, ClientTickEvents.S
 						}
 					}
 				}
-			} else
-				for (Field[] fa : getDeclaredField(gui.getClass()))
+			} else {
+				for (Field[] fa : getDeclaredField(gui.getClass())) {
 					for (Field f : fa) {
 						try {
 							f.setAccessible(true);
@@ -179,7 +185,7 @@ public class FabricCursorMod implements ClientModInitializer, ClientTickEvents.S
 								if (selectZone.isHover(mouseX, mouseY) && selectZone.isEnable())
 									newCursorType = CursorType.CROSS;
 							} else if (o instanceof Iterable) {
-								for (Object e : (Iterable<?>) o)
+								for (Object e : (Iterable<?>) o) {
 									if (e instanceof PressableWidget b) {
 										if (isHoverButton(mouseX, mouseY, b))
 											newCursorType = CursorType.HAND;
@@ -194,11 +200,15 @@ public class FabricCursorMod implements ClientModInitializer, ClientTickEvents.S
 									} else {
 										break;
 									}
+								}
 							}
 						} catch (Exception e) {
-							// ignore excpption linked
+							// ignore exception linked
 						}
 					}
+				}
+			}
+
 			MinecraftClient mc = MinecraftClient.getInstance();
 			if (gui instanceof HandledScreen<?> container) {
 				if (mc.player != null && mc.player.currentScreenHandler.getCursorStack() != null
@@ -242,7 +252,7 @@ public class FabricCursorMod implements ClientModInitializer, ClientTickEvents.S
 				int posY = (int) cursorClick.getPosY();
 				FabricGuiUtils.getFabric().setShader(FabricCommonShaders.getFabric().getPositionTexShader());
 				RenderSystem.setShaderTexture(0,
-						new Identifier("textures/gui/click_" + cursorClick.getImage() + ".png"));
+						Identifier.of("minecraft", "textures/gui/click_" + cursorClick.getImage() + ".png"));
 				FabricGuiUtils.getFabric().drawScaledCustomSizeModalRect(posX - 8, posY - 8, 0, 0, 16, 16, 16, 16, 16,
 						16, 0xffffffff, true);
 				cursorClick.descreaseTime(tickDelta);
@@ -253,34 +263,35 @@ public class FabricCursorMod implements ClientModInitializer, ClientTickEvents.S
 		}
 	}
 
-	@Override
-	public void afterMouseClick(Screen screen, double mouseX, double mouseY, int button) {
-		if (button == 0 && mod.getConfig().clickAnimation)
-			mod.getCursorClicks().add(new CursorClick(mouseX, mouseY));
-	}
-
-	@Override
-	public void afterTick(Screen screen) {
-		if (!mod.getCursorClicks().isEmpty() && MinecraftClient.getInstance().currentScreen == null)
-			mod.getCursorClicks().clear();
-	}
-
-	@Override
-	public void onClientStarted(MinecraftClient client) {
-		File saveDir = new File(client.runDirectory, "config");
-		try {
-			Files.createDirectories(saveDir.toPath());
-		} catch (IOException e) {
-			throw new RuntimeException("can't create directories: " + saveDir, e);
+	private List<Field[]> getDeclaredField(Class<?> cls) {
+		List<Field[]> l = new ArrayList<>();
+		l.add(cls.getDeclaredFields());
+		while (!cls.equals(Object.class)) {
+			cls = cls.getSuperclass();
+			l.add(cls.getDeclaredFields());
 		}
-		File save = new File(saveDir, CursorMod.MOD_ID + ".json");
-		mod.getConfig().sync(save);
-		mod.getCursors().values().forEach(CursorConfig::getCursor); // force allocation
-		mod.loadData(client.getWindow().getHandle());
+		return l;
 	}
 
-	@Override
-	public void onStartTick(MinecraftClient client) {
-		mod.waiter.tick();
+	private boolean isHover(int mouseX, int mouseY, int x, int y, int width, int height) {
+		x = Math.min(x + width, x);
+		y = Math.min(y + height, y);
+		width = Math.abs(width);
+		height = Math.abs(height);
+		return mouseX >= x && mouseX < x + width && mouseY >= y && mouseY < y + height;
+	}
+
+	private boolean isHoverButton(int mouseX, int mouseY, PressableWidget button) {
+		return button != null && button.visible && button.active
+				&& isHover(mouseX, mouseY, button.getX(), button.getY(), button.getWidth(), button.getHeight());
+	}
+
+	private boolean isHoverTextField(int mouseX, int mouseY, TextFieldWidget textField) {
+		return textField != null && textField.isVisible()
+				&& isHover(mouseX, mouseY, textField.getX(), textField.getY(), textField.getWidth(), textField.getHeight());
+	}
+
+	public static Slot getSlotUnderMouse(HandledScreen<?> screen) {
+		return ((HandledScreenMixin) screen).getFocusedSlot();
 	}
 }

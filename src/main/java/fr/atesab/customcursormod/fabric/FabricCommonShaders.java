@@ -30,7 +30,7 @@ public class FabricCommonShaders extends CommonShaders {
 
     @Override
     public CommonShader getPositionColorTexShader() {
-        return new FabricCommonShader(GameRenderer::getPositionColorTexProgram);
+        return new FabricCommonShader(GameRenderer::getPositionTexColorProgram);
     }
 
     @Override
@@ -70,12 +70,12 @@ public class FabricCommonShaders extends CommonShaders {
 
     @Override
     public CommonShader getPositionTexColorNormalShader() {
-        return new FabricCommonShader(GameRenderer::getPositionTexColorNormalProgram);
+        return new FabricCommonShader(GameRenderer::getRenderTypeSolidProgram);
     }
 
     @Override
     public CommonShader getPositionTexLightmapColorShader() {
-        return new FabricCommonShader(GameRenderer::getPositionTexLightmapColorProgram);
+        return new FabricCommonShader(GameRenderer::getPositionColorTexLightmapProgram);
     }
 
     @Override
@@ -105,7 +105,7 @@ public class FabricCommonShaders extends CommonShaders {
 
     @Override
     public CommonShader getRendertypeTranslucentNoCrumblingShader() {
-        return new FabricCommonShader(GameRenderer::getRenderTypeTranslucentNoCrumblingProgram);
+        return new FabricCommonShader(GameRenderer::getRenderTypeTranslucentProgram);
     }
 
     @Override

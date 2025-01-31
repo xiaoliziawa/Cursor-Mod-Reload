@@ -7,11 +7,14 @@ import fr.atesab.customcursormod.common.handler.CommonMatrixStack;
 import fr.atesab.customcursormod.common.handler.CommonShader;
 import fr.atesab.customcursormod.common.handler.GuiUtils;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.BufferRenderer;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.render.Tessellator;
-import net.minecraft.client.render.VertexFormat.DrawMode;
+import net.minecraft.client.render.VertexFormat;
 import net.minecraft.client.render.VertexFormats;
+import net.minecraft.client.render.BuiltBuffer;
+import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.util.math.MatrixStack;
 
 public class FabricGuiUtils extends GuiUtils {
@@ -20,9 +23,6 @@ public class FabricGuiUtils extends GuiUtils {
 
 	private static final FabricGuiUtils instance = new FabricGuiUtils();
 
-	/**
-	 * @return the instance
-	 */
 	public static FabricGuiUtils getFabric() {
 		return instance;
 	}
@@ -41,21 +41,32 @@ public class FabricGuiUtils extends GuiUtils {
 		int green = (color >> 8) & 0xFF;
 		int blue = color & 0xFF;
 		int alpha = useAlpha ? (color >> 24) : 0xff;
-		var tesselator = Tessellator.getInstance();
-		var bufferbuilder = tesselator.getBuffer();
-		bufferbuilder.begin(DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR);
-		bufferbuilder.vertex(x, y + height, 0.0D)
-				.texture(u * scaleX, (v + (float) vHeight) * scaleY).color(red, green, blue, alpha)
-				.next();
-		bufferbuilder.vertex(x + width, y + height, 0.0D)
+		
+		Tessellator tessellator = Tessellator.getInstance();
+		BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR);
+		
+		// 左下角
+		bufferBuilder.vertex((float)x, (float)(y + height), 0.0F)
+				.texture(u * scaleX, (v + (float) vHeight) * scaleY)
+				.color(red, green, blue, alpha);
+
+		// 右下角
+		bufferBuilder.vertex((float)(x + width), (float)(y + height), 0.0F)
 				.texture((u + (float) uWidth) * scaleX, (v + (float) vHeight) * scaleY)
-				.color(red, green, blue, alpha).next();
-		bufferbuilder.vertex(x + width, y, 0.0D)
-				.texture((u + (float) uWidth) * scaleX, v * scaleY).color(red, green, blue, alpha)
-				.next();
-		bufferbuilder.vertex(x, y, 0.0D).texture(u * scaleX, v * scaleY)
-				.color(red, green, blue, alpha).next();
-		tesselator.draw();
+				.color(red, green, blue, alpha);
+
+		// 右上角
+		bufferBuilder.vertex((float)(x + width), (float)y, 0.0F)
+				.texture((u + (float) uWidth) * scaleX, v * scaleY)
+				.color(red, green, blue, alpha);
+
+		// 左上角
+		bufferBuilder.vertex((float)x, (float)y, 0.0F)
+				.texture(u * scaleX, v * scaleY)
+				.color(red, green, blue, alpha);
+				
+		BuiltBuffer buffer = bufferBuilder.end();
+		BufferRenderer.drawWithGlobalProgram(buffer);
 	}
 
 	@Override
@@ -77,22 +88,35 @@ public class FabricGuiUtils extends GuiUtils {
 		float redRightBottom = (float) (rightBottomColor >> 16 & 255) / 255.0F;
 		float greenRightBottom = (float) (rightBottomColor >> 8 & 255) / 255.0F;
 		float blueRightBottom = (float) (rightBottomColor & 255) / 255.0F;
-		var bufferbuilder = Tessellator.getInstance().getBuffer();
+		
+		Tessellator tessellator = Tessellator.getInstance();
+		BufferBuilder bufferBuilder = tessellator.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_COLOR);
+		
 		RenderSystem.enableBlend();
 		RenderSystem.defaultBlendFunc();
-		RenderSystem.setShader(() -> GameRenderer.getPositionColorProgram());
+		RenderSystem.setShader(GameRenderer::getPositionColorProgram);
 		RenderSystem.blendFuncSeparate(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA,
 				GlStateManager.SrcFactor.ONE, GlStateManager.DstFactor.ZERO);
-		bufferbuilder.begin(DrawMode.QUADS, VertexFormats.POSITION_COLOR);
+		
 		var mat = stack.<MatrixStack>getHandle().peek().getPositionMatrix();
-		bufferbuilder.vertex(mat, right, top, zLevel).color(redRightTop, greenRightTop, blueRightTop, alphaRightTop)
-				.next();
-		bufferbuilder.vertex(mat, left, top, zLevel).color(redLeftTop, greenLeftTop, blueLeftTop, alphaLeftTop).next();
-		bufferbuilder.vertex(mat, left, bottom, zLevel)
-				.color(redLeftBottom, greenLeftBottom, blueLeftBottom, alphaLeftBottom).next();
-		bufferbuilder.vertex(mat, right, bottom, zLevel)
-				.color(redRightBottom, greenRightBottom, blueRightBottom, alphaRightBottom).next();
-		var buffer = bufferbuilder.end();
+		
+		// 右上
+		bufferBuilder.vertex(mat, (float)right, (float)top, zLevel)
+				.color(redRightTop, greenRightTop, blueRightTop, alphaRightTop);
+
+		// 左上
+		bufferBuilder.vertex(mat, (float)left, (float)top, zLevel)
+				.color(redLeftTop, greenLeftTop, blueLeftTop, alphaLeftTop);
+
+		// 左下
+		bufferBuilder.vertex(mat, (float)left, (float)bottom, zLevel)
+				.color(redLeftBottom, greenLeftBottom, blueLeftBottom, alphaLeftBottom);
+
+		// 右下
+		bufferBuilder.vertex(mat, (float)right, (float)bottom, zLevel)
+				.color(redRightBottom, greenRightBottom, blueRightBottom, alphaRightBottom);
+				
+		BuiltBuffer buffer = bufferBuilder.end();
 		BufferRenderer.drawWithGlobalProgram(buffer);
 		RenderSystem.disableBlend();
 	}

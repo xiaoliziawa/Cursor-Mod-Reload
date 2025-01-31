@@ -8,7 +8,7 @@ import net.minecraft.screen.slot.Slot;
 
 @Mixin(HandledScreen.class)
 public interface HandledScreenMixin {
-	
+
     @Accessor("focusedSlot")
     Slot getFocusedSlot();
 }

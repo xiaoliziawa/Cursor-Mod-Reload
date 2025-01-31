@@ -45,7 +45,6 @@ public class CommonSupplier<I, T> {
 	 * register an supplier for a type
 	 * 
 	 * @param type   the game type
-	 * @param action the action
 	 * @return this
 	 * @see #forType(GameType, Function)
 	 * @see #forType(GameType, Runnable)

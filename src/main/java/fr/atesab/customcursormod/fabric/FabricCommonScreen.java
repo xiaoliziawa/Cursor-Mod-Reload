@@ -77,7 +77,7 @@ public class FabricCommonScreen extends CommonScreen {
 	public void renderDefaultBackground(CommonMatrixStack stack) {
 		DrawContext context = new DrawContext(MinecraftClient.getInstance(), MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers());
 		context.getMatrices().multiplyPositionMatrix(stack.<MatrixStack>getHandle().peek().getPositionMatrix());
-		handle.renderBackground(context);
+		handle.renderBackground(context, 0, 0, 0);
 	}
 
 	@Override

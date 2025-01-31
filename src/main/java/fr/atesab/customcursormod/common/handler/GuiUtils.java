@@ -91,7 +91,6 @@ public abstract class GuiUtils {
 	 * @param endColor   endColor color
 	 * @param zLevel     zLevel of the screen
 	 * 
-	 * @see #drawGradientRect(PoseStack, int, int, int, int, int, int, int, int,
 	 *      float)
 	 * @since 2.0
 	 */
@@ -114,7 +113,6 @@ public abstract class GuiUtils {
 	 * @param rightBottomColor rightBottomColor color (ARGB)
 	 * @param zLevel           zLevel of the screen
 	 * 
-	 * @see #drawGradientRect(PoseStack, int, int, int, int, int, int, float)
 	 * @since 2.0
 	 */
 	public abstract void drawGradientRect(CommonMatrixStack stack, int left, int top, int right, int bottom,

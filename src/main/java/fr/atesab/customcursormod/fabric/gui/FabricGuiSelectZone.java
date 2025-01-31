@@ -3,6 +3,7 @@ package fr.atesab.customcursormod.fabric.gui;
 import fr.atesab.customcursormod.common.cursor.SelectZone;
 import net.minecraft.client.gui.Element;
 
+
 public class FabricGuiSelectZone extends SelectZone implements Element {
 	private int xPosition;
 	private int yPosition;

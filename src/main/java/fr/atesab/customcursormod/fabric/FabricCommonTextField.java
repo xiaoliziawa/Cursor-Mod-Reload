@@ -111,7 +111,7 @@ public class FabricCommonTextField extends CommonTextField {
 				if (enabled) {
 					String text = handle.getText();
 					i = MinecraftClient.getInstance().textRenderer.trimToWidth(text, i).length();
-					handle.setCursor(i);
+					handle.setCursor(i, false);
 					handle.setSelectionStart(i);
 					handle.setSelectionEnd(i);
 				}
@@ -147,6 +147,7 @@ public class FabricCommonTextField extends CommonTextField {
 
 	@Override
 	public void tick() {
-		handle.tick();
+		// 在1.21.1中，TextFieldWidget不再需要tick方法
+		// 光标闪烁等功能现在由渲染系统自动处理
 	}
 }

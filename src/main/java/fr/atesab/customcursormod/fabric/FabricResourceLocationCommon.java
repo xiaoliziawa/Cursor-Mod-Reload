@@ -15,7 +15,7 @@ public class FabricResourceLocationCommon extends ResourceLocationCommon {
 	private final Identifier resource;
 
 	public FabricResourceLocationCommon(String link) {
-		resource = new Identifier(link);
+		resource = Identifier.of(link);
 	}
 
 	public FabricResourceLocationCommon(Identifier resource) {

@@ -175,9 +175,7 @@ public class CursorConfig {
 	}
 
 	public void setxHotSpot(int xHotSpot) {
-		// 根据当前大小调整热点位置
-		float scale = (float)size / 32.0f;
-		this.xHotSpot = (int)(xHotSpot * scale);
+		this.xHotSpot = xHotSpot;
 		if (cursor != MemoryUtil.NULL) {
 			freeCursor();
 			allocate();
@@ -185,9 +183,7 @@ public class CursorConfig {
 	}
 
 	public void setyHotSpot(int yHotSpot) {
-		// 根据当前大小调整热点位置
-		float scale = (float)size / 32.0f;
-		this.yHotSpot = (int)(yHotSpot * scale);
+		this.yHotSpot = yHotSpot;
 		if (cursor != MemoryUtil.NULL) {
 			freeCursor();
 			allocate();

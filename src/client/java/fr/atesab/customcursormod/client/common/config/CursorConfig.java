@@ -1,11 +1,17 @@
 package fr.atesab.customcursormod.client.common.config;
 
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import javax.imageio.ImageIO;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import fr.atesab.customcursormod.client.common.handler.ResourceLocationCommon;
 import org.lwjgl.BufferUtils;
@@ -15,6 +21,8 @@ import org.lwjgl.system.MemoryUtil;
 
 
 public class CursorConfig {
+	private static final String CONFIG_PATH = "config/customcursormod.json";
+
 	public static class CursorConfigStore {
 		int xHotSpot;
 		int yHotSpot;
@@ -70,10 +78,22 @@ public class CursorConfig {
 	}
 
 	private void allocate() {
-		readImage();
-		if (cursor != MemoryUtil.NULL)
+		if (cursor != MemoryUtil.NULL) {
 			freeCursor();
-		cursor = GLFW.glfwCreateCursor(glfwImage, getxHotSpot(), getyHotSpot());
+		}
+		
+		readImage();
+		
+		int finalXHotSpot = Math.min(Math.max(0, xHotSpot), size - 1);
+		int finalYHotSpot = Math.min(Math.max(0, yHotSpot), size - 1);
+		
+		cursor = GLFW.glfwCreateCursor(glfwImage, finalXHotSpot, finalYHotSpot);
+		
+		if (cursor == MemoryUtil.NULL) {
+			System.err.println("Failed to create cursor with hotspot (" + finalXHotSpot + "," + finalYHotSpot + ")");
+		} else {
+			System.out.println("Created cursor with hotspot (" + finalXHotSpot + "," + finalYHotSpot + ")");
+		}
 	}
 
 	public CursorConfig copy() {
@@ -125,11 +145,24 @@ public class CursorConfig {
 	private void readImage() {
 		try {
 			BufferedImage image = ImageIO.read(getResource());
-			int w = image.getWidth();
-			int h = image.getHeight();
+			if (image == null) {
+				System.err.println("Failed to load cursor image: " + link);
+				return;
+			}
+
+			int originalWidth = image.getWidth();
+			int originalHeight = image.getHeight();
+			
+			float scaleX = (float)size / originalWidth;
+			float scaleY = (float)size / originalHeight;
+			xHotSpot = Math.round(xHotSpot * scaleX);
+			yHotSpot = Math.round(yHotSpot * scaleY);
 			
 			BufferedImage resized = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
-			resized.createGraphics().drawImage(image.getScaledInstance(size, size, java.awt.Image.SCALE_SMOOTH), 0, 0, null);
+			resized.createGraphics().drawImage(
+				image.getScaledInstance(size, size, java.awt.Image.SCALE_SMOOTH), 
+				0, 0, null
+			);
 			
 			int[] pixels = new int[size * size];
 			resized.getRGB(0, 0, size, size, pixels, 0, size);
@@ -146,30 +179,97 @@ public class CursorConfig {
 			buffer.flip();
 			glfwImage.pixels(buffer).width(size).height(size);
 		} catch (IOException | NullPointerException e) {
+			System.err.println("Error loading cursor image: " + e.getMessage());
 			e.printStackTrace();
 		}
 	}
 
 	public void setLink(String link) {
-		if (cursor != MemoryUtil.NULL)
-			allocate();
 		this.link = link;
+		if (cursor != MemoryUtil.NULL) {
+			allocate();
+		}
 	}
 
 	public void setxHotSpot(int xHotSpot) {
-		if (cursor != MemoryUtil.NULL)
-			allocate();
 		this.xHotSpot = xHotSpot;
+		if (cursor != MemoryUtil.NULL) {
+			allocate();
+		}
 	}
 
 	public void setyHotSpot(int yHotSpot) {
-		if (cursor != MemoryUtil.NULL)
-			allocate();
 		this.yHotSpot = yHotSpot;
+		if (cursor != MemoryUtil.NULL) {
+			allocate();
+		}
 	}
 
 	public CursorConfigStore write() {
-		return new CursorConfigStore(this);
+		CursorConfigStore store = new CursorConfigStore(this);
+		try {
+			File configDir = new File("config").getAbsoluteFile();
+			if (!configDir.exists()) {
+				if (!configDir.mkdirs()) {
+					System.err.println("Failed to create config directory: " + configDir);
+					return store;
+				}
+			}
+			
+			File configFile = new File(configDir, "customcursormod.json");
+			
+			if (configFile.exists() && !configFile.canWrite()) {
+				System.err.println("Config file is not writable: " + configFile);
+				return store;
+			}
+			
+			Gson gson = new GsonBuilder().setPrettyPrinting().create();
+			String json = gson.toJson(store);
+			Files.write(configFile.toPath(), json.getBytes());
+			
+			System.out.println("Successfully saved cursor config to: " + configFile);
+		} catch (IOException e) {
+			System.err.println("Failed to save cursor config: " + e.getMessage());
+			e.printStackTrace();
+		}
+		return store;
+	}
+
+	public static CursorConfig loadFromFile() {
+		try {
+			File configFile = new File("config/customcursormod.json").getAbsoluteFile();
+			
+			if (!configFile.exists()) {
+				File oldConfigFile = new File("config/cursor-mod.json").getAbsoluteFile();
+				if (oldConfigFile.exists()) {
+					Files.copy(oldConfigFile.toPath(), configFile.toPath());
+					oldConfigFile.delete();
+					System.out.println("Migrated config from cursor-mod.json to customcursormod.json");
+				}
+			}
+			
+			if (configFile.exists()) {
+				if (!configFile.canRead()) {
+					System.err.println("Config file is not readable: " + configFile);
+					return getDefaultConfig();
+				}
+				
+				String json = new String(Files.readAllBytes(configFile.toPath()));
+				Gson gson = new Gson();
+				CursorConfigStore store = gson.fromJson(json, CursorConfigStore.class);
+				
+				System.out.println("Successfully loaded cursor config from: " + configFile);
+				return read(store, getDefaultConfig());
+			}
+		} catch (IOException e) {
+			System.err.println("Failed to load cursor config: " + e.getMessage());
+			e.printStackTrace();
+		}
+		return getDefaultConfig();
+	}
+
+	private static CursorConfig getDefaultConfig() {
+		return new CursorConfig("textures/cursor/default.png", 0, 0);
 	}
 
 	public int getSize() {
@@ -177,7 +277,7 @@ public class CursorConfig {
 	}
 
 	public void setSize(int size) {
-		if (size <= 0) size = 32;
+		if (size <= 0) size = 16;
 		if (size > 256) size = 256;
 		if (this.size != size) {
 			this.size = size;

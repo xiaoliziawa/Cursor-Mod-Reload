@@ -7,26 +7,22 @@
   "authors": ["ATE47", "KevinFernandezDominguez", "PrizOwO"],
   "contact": {},
   "license": "GPL-3.0",
-  "icon": "assets/cursormod/icon.png",
+  "icon": "assets/customcursormod/icon.png",
   "environment": "client",
   "entrypoints": {
     "client": [
-      "fr.atesab.customcursormod.client.CustomcursormodClient"
+      "fr.atesab.customcursormod.fabric.FabricCursorMod"
     ],
-    "main": [
-      "fr.atesab.customcursormod.Customcursormod"
+    "modmenu": [
+      "fr.atesab.customcursormod.fabric.ModMenuCompat"
     ]
   },
   "mixins": [
-    "customcursormod.mixins.json",
-    {
-      "config": "customcursormod.client.mixins.json",
-      "environment": "client"
-    }
+    "customcursormod.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=0.16.4",
     "fabric": "*",
-    "minecraft": ">=1.21.3 <=1.21.4"
+    "minecraft": ">=1.21.5"
   }
 }

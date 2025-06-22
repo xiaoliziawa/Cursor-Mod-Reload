@@ -48,14 +48,15 @@ public class GuiConfigCursorMod extends CommonScreen.ScreenListener {
 		try {
 			BufferedImage image = ImageIO.read(cursorConfig.getResource());
 			int imageWidth = image.getWidth();
-			int imageHeight = image.getWidth();
-			int numImage = image.getHeight() / image.getWidth();
+			int imageHeight = image.getWidth(); // 单帧高度（正方形）
+			int totalImageHeight = image.getHeight(); // 图像总高度
 			var gutils = GuiUtils.get();
 			gutils.drawGradientRect(stack, getScreen().getBlitOffset(), posX, posY, posX + 20, posY + 20, -1072689136,
 					-804253680);
 			cursorConfig.getResourceLocation().setShaderTexture();
+			// 只渲染第一帧，参数：位置(posX,posY), UV(0,0), UV尺寸(imageWidth,imageHeight), 渲染尺寸(20,20), 纹理总尺寸(imageWidth,总高度)
 			gutils.drawScaledCustomSizeModalRect(posX, posY, 0, 0, imageWidth, imageHeight, 20, 20, imageWidth,
-					imageHeight * numImage, 0xffffffff, true);
+					totalImageHeight, 0xffffffff, true);
 		} catch (Exception e) {
 			// hide
 		}
@@ -102,14 +103,16 @@ public class GuiConfigCursorMod extends CommonScreen.ScreenListener {
 		for (Entry<CursorType, CursorConfig> entry : cursors.entrySet()) {
 			CursorType type = entry.getKey();
 			CursorConfig cfg = entry.getValue();
-			cursorButtons.add(CommonButtonValue.<CursorType>create(type, type.getTranslation(), width / 2 - 100,
+			CommonButtonValue<CursorType> button = CommonButtonValue.<CursorType>create(type, type.getTranslation(), width / 2 - 100,
 					height / 2 + ((i++) % elementByPage - elementByPage / 2) * 21, 200, 20,
 					b -> GuiCursorConfig
 							.create(screen, type, cfg,
 									cursorConfig -> CursorMod.getInstance().replaceCursor(type, cursorConfig))
-							.displayScreen()));
+							.displayScreen());
+
+			cursorButtons.add(button);
+			screen.addChildren(button);
 		}
-		screen.childrens.addAll(cursorButtons);
 		defineButton();
 		super.init();
 	}

@@ -30,6 +30,13 @@ public class CommonButtonValue<T> extends CommonButton {
 		this.value = value;
 	}
 
+	/**
+	 * @return the underlying CommonButton handle
+	 */
+	public CommonButton getHandle() {
+		return handle;
+	}
+
 	@Override
 	public int getXPosition() {
 		return handle.getXPosition();

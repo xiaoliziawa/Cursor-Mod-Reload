@@ -7,15 +7,15 @@ import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 
 public class FabricStringCommonTextImpl extends StringCommonText {
-
 	private final MutableText handle;
+
 	public FabricStringCommonTextImpl(String text) {
 		handle = Text.literal(text);
 	}
+
 	public FabricStringCommonTextImpl(MutableText handle) {
 		this.handle = handle;
 	}
-
 
 	@Override
 	public String getString() {
@@ -27,6 +27,7 @@ public class FabricStringCommonTextImpl extends StringCommonText {
 	public <T> T getHandle() {
 		return (T) handle;
 	}
+
 	@Override
 	public FabricStringCommonTextImpl copy() {
 		return new FabricStringCommonTextImpl(this.handle.copy());

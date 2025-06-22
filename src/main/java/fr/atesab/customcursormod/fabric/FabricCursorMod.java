@@ -1,7 +1,5 @@
 package fr.atesab.customcursormod.fabric;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.textures.GpuTexture;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import fr.atesab.customcursormod.common.CursorMod;
 import fr.atesab.customcursormod.common.config.CursorConfig;
@@ -20,6 +18,7 @@ import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenMouseEvents;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ChatScreen;
 import net.minecraft.client.gui.screen.Screen;
@@ -30,7 +29,6 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.item.Items;
-import net.minecraft.screen.slot.Slot;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
@@ -59,8 +57,13 @@ public class FabricCursorMod implements ClientModInitializer {
 		CommonButton.SUPPLIER.forType(GameType.FABRIC, FabricCommonButton::new);
 		CommonTextField.SUPPLIER.forType(GameType.FABRIC, FabricCommonTextField::new);
 		CommonScreen.SUPPLIER.forType(GameType.FABRIC, FabricCommonScreen::new);
-		CommonScreen.SUPPLIER_CURRENT.forType(GameType.FABRIC,
-				v -> new FabricBasicCommonScreen(MinecraftClient.getInstance().currentScreen));
+		CommonScreen.SUPPLIER_CURRENT.forType(GameType.FORGE, v -> {
+			Screen screen = MinecraftClient.getInstance().currentScreen;
+			if (screen instanceof FabricCommonScreen.FabricCommonScreenHandler) {
+				return ((FabricCommonScreen.FabricCommonScreenHandler) screen).getCommonScreen();
+			}
+			return CommonScreen.createNull();
+		});
 		fr.atesab.customcursormod.common.utils.I18n.SUPPLIER.forType(GameType.FABRIC,
 				obj -> I18n.translate(obj.format, obj.args));
 	}
@@ -154,7 +157,7 @@ public class FabricCursorMod implements ClientModInitializer {
 		CursorType newCursorType = CursorType.POINTER;
 		if (mod.getConfig().dynamicCursor) {
 			if (gui instanceof FabricCommonScreen.FabricCommonScreenHandler handle) { // Our menu
-				CommonScreen cs = handle.cs;
+				CommonScreen cs = handle.getCommonScreen();
 				for (CommonElement o : cs.childrens) {
 					if (!o.isEnable())
 						continue;
@@ -226,7 +229,7 @@ public class FabricCursorMod implements ClientModInitializer {
 
 			CommonScreen commonScreen;
 			if (gui instanceof FabricCommonScreen.FabricCommonScreenHandler handler) {
-				commonScreen = handler.cs;
+				commonScreen = handler.getCommonScreen();
 			} else {
 				commonScreen = new FabricBasicCommonScreen(gui);
 			}
@@ -246,10 +249,12 @@ public class FabricCursorMod implements ClientModInitializer {
 				CursorClick cursorClick = iterator.next();
 				int posX = (int) cursorClick.getPosX();
 				int posY = (int) cursorClick.getPosY();
-				GpuTexture texture = MinecraftClient.getInstance().getTextureManager().getTexture(Identifier.of(CursorMod.MOD_ID, "textures/gui/click_" + cursorClick.getImage() + ".png")).getGlTexture();
-				RenderSystem.setShaderTexture(0, texture);
-				FabricGuiUtils.getFabric().drawScaledCustomSizeModalRect(posX - 8, posY - 8, 0, 0, 16, 16, 16, 16, 16, 16,
-						0xffffffff, true);
+				try {
+					Identifier texture = Identifier.ofVanilla("textures/gui/click_" + cursorClick.getImage() + ".png");
+					context.drawTexture(RenderPipelines.GUI_TEXTURED, texture, posX - 8, posY - 8, 0, 0, 16, 16, 16, 16);
+				} catch (Exception e) {
+					// 静默处理异常
+				}
 				cursorClick.descreaseTime(tickDelta);
 				if (cursorClick.getTime() <= 0) {
 					iterator.remove();

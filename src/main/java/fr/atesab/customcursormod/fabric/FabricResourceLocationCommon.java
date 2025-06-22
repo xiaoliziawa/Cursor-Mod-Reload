@@ -5,20 +5,19 @@ import java.io.InputStream;
 import java.util.Optional;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-
-import com.mojang.blaze3d.textures.GpuTexture;
-import fr.atesab.customcursormod.common.CursorMod;
+import com.mojang.blaze3d.textures.GpuTextureView;
 import fr.atesab.customcursormod.common.handler.ResourceLocationCommon;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.texture.AbstractTexture;
 import net.minecraft.resource.Resource;
 import net.minecraft.util.Identifier;
 
 public class FabricResourceLocationCommon extends ResourceLocationCommon {
 	private final Identifier resource;
-	private GpuTexture texture;
+	private GpuTextureView textureView;
 
 	public FabricResourceLocationCommon(String link) {
-		resource = Identifier.of(CursorMod.MOD_ID, link);
+		resource = Identifier.ofVanilla(link);
 	}
 
 	public FabricResourceLocationCommon(Identifier resource) {
@@ -26,23 +25,25 @@ public class FabricResourceLocationCommon extends ResourceLocationCommon {
 	}
 
 	private void bindTexture() {
-		texture = MinecraftClient.getInstance().getTextureManager().getTexture(resource).getGlTexture();
+		AbstractTexture abstractTexture = MinecraftClient.getInstance().getTextureManager().getTexture(resource);
+		textureView = abstractTexture.getGlTextureView();
 	}
 
 	@Override
 	public void bindForSetup() {
-		if (texture == null) {
+		if (textureView == null) {
 			bindTexture();
 		}
-		RenderSystem.setShaderTexture(0, texture);
+		RenderSystem.setShaderTexture(0, textureView);
 	}
 
 	@Override
 	public void setShaderTexture() {
-		if (texture == null) {
+		if (textureView == null) {
 			bindTexture();
 		}
-		RenderSystem.setShaderTexture(0, texture);
+		RenderSystem.setShaderTexture(0, textureView);
+		FabricGuiUtils.setCurrentTexture(resource);
 	}
 
 	@Override
@@ -53,5 +54,4 @@ public class FabricResourceLocationCommon extends ResourceLocationCommon {
 		}
 		return res.get().getInputStream();
 	}
-
 }

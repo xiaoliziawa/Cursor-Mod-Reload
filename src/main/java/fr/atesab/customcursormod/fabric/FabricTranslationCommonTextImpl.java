@@ -7,18 +7,18 @@ import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableTextContent;
 
 public class FabricTranslationCommonTextImpl extends TranslationCommonText {
-
 	private final MutableText handle;
+
 	public FabricTranslationCommonTextImpl(String text, Object... args) {
 		this(Text.translatable(text, args));
 	}
+
 	public FabricTranslationCommonTextImpl(MutableText handle) {
 		this.handle = handle;
 		if (!(handle.getContent() instanceof TranslatableTextContent)) {
 			throw new IllegalArgumentException("not a translatable text!");
 		}
 	}
-
 
 	@Override
 	public String getString() {
@@ -38,6 +38,7 @@ public class FabricTranslationCommonTextImpl extends TranslationCommonText {
 	public <T> T getHandle() {
 		return (T) handle;
 	}
+
 	@Override
 	public FabricTranslationCommonTextImpl copy() {
 		return new FabricTranslationCommonTextImpl(this.handle.copy());

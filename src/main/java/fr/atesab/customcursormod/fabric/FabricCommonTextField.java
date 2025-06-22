@@ -5,12 +5,12 @@ import fr.atesab.customcursormod.common.handler.CommonTextField;
 import fr.atesab.customcursormod.fabric.mixin.AbstractButtonWidgetAccessor;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.render.state.GuiRenderState;
 import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 
 public class FabricCommonTextField extends CommonTextField {
-	private final TextFieldWidget handle;
+	public final TextFieldWidget handle;
 	private boolean enabled = true;
 
 	public FabricCommonTextField(TextFieldWidget handle) {
@@ -124,9 +124,10 @@ public class FabricCommonTextField extends CommonTextField {
 
 	@Override
 	public void render(CommonMatrixStack stack, int mouseX, int mouseY, float partialTicks) {
-		DrawContext context = new DrawContext(MinecraftClient.getInstance(), MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers());
-		context.getMatrices().multiplyPositionMatrix(stack.<MatrixStack>getHandle().peek().getPositionMatrix());
+		DrawContext context = new DrawContext(MinecraftClient.getInstance(), new GuiRenderState());
+		context.getMatrices().pushMatrix();
 		handle.render(context, mouseX, mouseY, partialTicks);
+		context.getMatrices().popMatrix();
 	}
 
 	@Override
@@ -143,11 +144,5 @@ public class FabricCommonTextField extends CommonTextField {
 			return handle.keyPressed(key, scan, modifier);
 		}
 		return false;
-	}
-
-	@Override
-	public void tick() {
-		// 在1.21.1中，TextFieldWidget不再需要tick方法
-		// 光标闪烁等功能现在由渲染系统自动处理
 	}
 }

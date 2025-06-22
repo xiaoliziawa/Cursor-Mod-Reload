@@ -3,24 +3,70 @@ package fr.atesab.customcursormod.fabric;
 import fr.atesab.customcursormod.common.handler.CommonButton;
 import fr.atesab.customcursormod.common.handler.CommonMatrixStack;
 import fr.atesab.customcursormod.common.handler.CommonText;
-import fr.atesab.customcursormod.fabric.mixin.AbstractButtonWidgetAccessor;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.render.state.GuiRenderState;
 import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.text.Text;
 
 public class FabricCommonButton extends CommonButton {
-	public final ButtonWidget handle;
+	// 自定义Button类，覆盖render方法
+	public static class CustomButton extends ButtonWidget {
+		private final FabricCommonButton parent;
+
+		public CustomButton(FabricCommonButton parent, CommonButtonObject obj) {
+			super(obj.xPosition, obj.yPosition, obj.width, obj.height,
+					obj.message.getHandle(), b -> obj.action.accept(parent), DEFAULT_NARRATION_SUPPLIER);
+			this.parent = parent;
+		}
+
+		@Override
+		public void renderWidget(DrawContext context, int mouseX, int mouseY, float partialTicks) {
+			if (!visible) return;
+
+			// 检查鼠标是否悬停在按钮上
+			boolean hovered = mouseX >= getX() && mouseY >= getY() &&
+					mouseX < getX() + getWidth() &&
+					mouseY < getY() + getHeight();
+
+			// 自定义按钮背景
+			FabricGuiUtils.drawRoundedButton(context, getX(), getY(),
+					getWidth(), getHeight(),
+					hovered, active);
+			// 绘制按钮文本
+			String text = getMessage().getString();
+			MinecraftClient client = MinecraftClient.getInstance();
+			int textColor;
+
+			if (!active) {
+				// 禁用状态：暗灰色
+				textColor = 0xFF404040;
+			} else if (hovered) {
+				// 悬停状态：亮蓝白色
+				textColor = 0xFFe6e6ff;
+			} else {
+				// 正常状态：明亮的浅灰色
+				textColor = 0xFFe0e0e0;
+			}
+			// 计算文本居中位置
+			int textX = getX() + (getWidth() - client.textRenderer.getWidth(text)) / 2;
+			int textY = getY() + (getHeight() - client.textRenderer.fontHeight) / 2;
+			// 绘制文本阴影
+			if (active) {
+				context.drawTextWithShadow(client.textRenderer, text, textX + 1, textY + 1, 0x80000000);
+			}
+			// 绘制文本
+			context.drawTextWithShadow(client.textRenderer, text, textX, textY, textColor);
+		}
+	}
+
+	public final CustomButton handle;
 
 	public FabricCommonButton(CommonButtonObject obj) {
-		handle = ButtonWidget.builder(obj.message.<Text>getHandle(), b -> obj.action.accept(this))
-			.dimensions(obj.xPosition, obj.yPosition, obj.width, obj.height)
-			.build();
+		handle = new CustomButton(this, obj);
 	}
 
 	public FabricCommonButton(ButtonWidget handle) {
-		this.handle = handle;
+		// 这个构造函数不应该被使用，因为我们需要自定义Button
+		throw new UnsupportedOperationException("Use NeoForgeCommonButton(CommonButtonObject) constructor instead");
 	}
 
 	@Override
@@ -56,7 +102,6 @@ public class FabricCommonButton extends CommonButton {
 	@Override
 	public void setYPosition(int yPosition) {
 		handle.setY(yPosition);
-
 	}
 
 	@Override
@@ -66,7 +111,7 @@ public class FabricCommonButton extends CommonButton {
 
 	@Override
 	public void setHeight(int height) {
-		((AbstractButtonWidgetAccessor) handle).setHeight(height);
+		handle.setHeight(height);
 	}
 
 	@Override
@@ -86,7 +131,7 @@ public class FabricCommonButton extends CommonButton {
 
 	@Override
 	public void setMessage(CommonText message) {
-		handle.setMessage(message.<Text>getHandle());
+		handle.setMessage(message.getHandle());
 	}
 
 	@Override
@@ -96,9 +141,7 @@ public class FabricCommonButton extends CommonButton {
 
 	@Override
 	public void render(CommonMatrixStack stack, int mouseX, int mouseY, float partialTicks) {
-		MinecraftClient client = MinecraftClient.getInstance();
-		DrawContext context = new DrawContext(client, new GuiRenderState());
-		handle.render(context, mouseX, mouseY, partialTicks);
+		// 现在由CustomButton.renderWidget处理渲染，这个方法不再需要
 	}
 
 	@Override

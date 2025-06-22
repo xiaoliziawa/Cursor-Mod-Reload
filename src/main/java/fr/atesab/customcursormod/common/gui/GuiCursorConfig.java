@@ -29,6 +29,7 @@ public class GuiCursorConfig extends CommonScreen.ScreenListener {
 	private CommonButton doneButton;
 	private int imageWidth = 1;
 	private int imageHeight = 1;
+	private int totalImageHeight = 1; // 图像总高度
 	private int numImage = 1;
 	private final CursorType type;
 	private CursorConfig cursorConfig;
@@ -78,9 +79,10 @@ public class GuiCursorConfig extends CommonScreen.ScreenListener {
 			} catch (NumberFormatException e) {
 				// 使用当前大小
 			}
-			
+
+			// 只渲染第一帧，参数：位置, UV起始, UV尺寸, 渲染尺寸, 纹理总尺寸
 			gutils.drawScaledCustomSizeModalRect(width / 2 + 36, height / 2 - 64, 0, 0, imageWidth, imageHeight,
-					128, 128, imageWidth, imageHeight * numImage, 0xffffffff, true);
+					128, 128, imageWidth, totalImageHeight, 0xffffffff, true);
 			
 			if (cursorConfig.getxHotSpot() >= 0 && cursorConfig.getxHotSpot() < imageWidth
 					&& cursorConfig.getyHotSpot() >= 0 && cursorConfig.getyHotSpot() < imageHeight)
@@ -158,8 +160,8 @@ public class GuiCursorConfig extends CommonScreen.ScreenListener {
 			BufferedImage image = ImageIO.read(cursorConfig.getResource());
 			if (image != null) {
 				imageWidth = image.getWidth();
-				imageHeight = image.getWidth();
-				numImage = image.getHeight() / image.getWidth();
+				imageHeight = image.getWidth(); // 单帧高度（正方形）
+				totalImageHeight = image.getHeight(); // 总高度（包含所有帧）
 				return true;
 			}
 			return false;

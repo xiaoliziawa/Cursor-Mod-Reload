@@ -6,12 +6,11 @@ import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 
 public class FabricCommonTextAppendable extends CommonTextAppendable {
-
 	private final MutableText handle;
+
 	public FabricCommonTextAppendable(MutableText handle) {
 		this.handle = handle;
 	}
-
 
 	@Override
 	public String getString() {

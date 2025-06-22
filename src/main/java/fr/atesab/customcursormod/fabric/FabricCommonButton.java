@@ -6,8 +6,8 @@ import fr.atesab.customcursormod.common.handler.CommonText;
 import fr.atesab.customcursormod.fabric.mixin.AbstractButtonWidgetAccessor;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.render.state.GuiRenderState;
 import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 
 public class FabricCommonButton extends CommonButton {
@@ -97,8 +97,7 @@ public class FabricCommonButton extends CommonButton {
 	@Override
 	public void render(CommonMatrixStack stack, int mouseX, int mouseY, float partialTicks) {
 		MinecraftClient client = MinecraftClient.getInstance();
-		DrawContext context = new DrawContext(client, client.getBufferBuilders().getEntityVertexConsumers());
-		context.getMatrices().multiplyPositionMatrix(stack.<MatrixStack>getHandle().peek().getPositionMatrix());
+		DrawContext context = new DrawContext(client, new GuiRenderState());
 		handle.render(context, mouseX, mouseY, partialTicks);
 	}
 
@@ -106,5 +105,4 @@ public class FabricCommonButton extends CommonButton {
 	public boolean isVisible() {
 		return handle.visible;
 	}
-
 }

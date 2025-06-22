@@ -9,7 +9,7 @@ import net.minecraft.client.render.VertexFormats;
 import net.minecraft.util.Identifier;
 
 public class FabricRenderPipelines {
-    public static final RenderPipeline.Snippet CURSOR_SNIPPET = RenderPipeline.builder(RenderPipelines.MATRICES_COLOR_SNIPPET)
+    public static final RenderPipeline.Snippet CURSOR_SNIPPET = RenderPipeline.builder(RenderPipelines.POSITION_TEX_COLOR_SNIPPET)
             .withVertexShader("core/position_tex_color")
             .withFragmentShader("core/position_tex_color")
             .withSampler("Sampler0")

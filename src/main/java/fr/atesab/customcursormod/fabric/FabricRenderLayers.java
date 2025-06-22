@@ -3,7 +3,6 @@ package fr.atesab.customcursormod.fabric;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.RenderPhase;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.TriState;
 import net.minecraft.util.Util;
 
 import java.util.function.Function;
@@ -23,7 +22,7 @@ public class FabricRenderLayers {
                     2048,
                     FabricRenderPipelines.CURSOR,
                     RenderLayer.MultiPhaseParameters.builder()
-                            .texture(new RenderPhase.Texture(resourceLocation, TriState.FALSE, false))
+                            .texture(new RenderPhase.Texture(resourceLocation, false))
                             .build(false)
             )
     );

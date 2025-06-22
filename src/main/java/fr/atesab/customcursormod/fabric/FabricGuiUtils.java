@@ -1,13 +1,17 @@
 package fr.atesab.customcursormod.fabric;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-
 import fr.atesab.customcursormod.common.handler.CommonMatrixStack;
 import fr.atesab.customcursormod.common.handler.GuiUtils;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gl.RenderPipelines;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.*;
+import net.minecraft.util.Identifier;
 
 public class FabricGuiUtils extends GuiUtils {
+	private static Identifier currentTexture;
+	private static DrawContext currentDrawContext;
+
 	private FabricGuiUtils() {
 	}
 
@@ -15,6 +19,20 @@ public class FabricGuiUtils extends GuiUtils {
 
 	public static FabricGuiUtils getFabric() {
 		return instance;
+	}
+
+	/**
+	 * 设置当前的纹理资源位置
+	 */
+	public static void setCurrentTexture(Identifier texture) {
+		currentTexture = texture;
+	}
+
+	/**
+	 * 设置当前的DrawContext实例
+	 */
+	public static void setCurrentDrawContext(DrawContext context) {
+		currentDrawContext = context;
 	}
 
 	@Override
@@ -25,31 +43,10 @@ public class FabricGuiUtils extends GuiUtils {
 	@Override
 	public void drawScaledCustomSizeModalRect(int x, int y, float u, float v, int uWidth, int vHeight, int width,
 			int height, float tileWidth, float tileHeight, int color, boolean useAlpha) {
-		float scaleX = 1.0F / tileWidth;
-		float scaleY = 1.0F / tileHeight;
-		int red = (color >> 16) & 0xFF;
-		int green = (color >> 8) & 0xFF;
-		int blue = color & 0xFF;
-		int alpha = useAlpha ? (color >> 24) : 0xff;
-
-		VertexConsumerProvider.Immediate bufferSource = MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers();
-		VertexConsumer vertexBuffer = bufferSource.getBuffer(FabricRenderLayers.CURSOR);
-
-		vertexBuffer.vertex((float) x, (float) (y + height), 0.0F)
-				.texture(u * scaleX, (v + (float) vHeight) * scaleY)
-				.color(red, green, blue, alpha);
-
-		vertexBuffer.vertex((float) (x + width), (float) (y + height), 0.0F)
-				.texture((u + (float) uWidth) * scaleX, (v + (float) vHeight) * scaleY)
-				.color(red, green, blue, alpha);
-
-		vertexBuffer.vertex((float) (x + width), (float) y, 0.0F)
-				.texture((u + (float) uWidth) * scaleX, v * scaleY)
-				.color(red, green, blue, alpha);
-
-		vertexBuffer.vertex((float) x, (float) y, 0.0F)
-				.texture(u * scaleX, v * scaleY)
-				.color(red, green, blue, alpha);
+		if (currentDrawContext != null && currentTexture != null) {
+			currentDrawContext.drawTexture(RenderPipelines.GUI_TEXTURED,
+					currentTexture, x, y, u, v, width, height, uWidth, vHeight, (int)tileWidth, (int)tileHeight, color);
+		}
 	}
 
 	@Override
@@ -73,8 +70,7 @@ public class FabricGuiUtils extends GuiUtils {
 		float blueRightBottom = (float) (rightBottomColor & 255) / 255.0F;
 
 		VertexConsumerProvider.Immediate bufferSource = MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers();
-		VertexConsumer vertexBuffer = bufferSource.getBuffer(RenderLayer.getGui());
-
+		VertexConsumer vertexBuffer = bufferSource.getBuffer(RenderLayer.getDebugQuads());
 
 		vertexBuffer.vertex((float) right, (float) top, zLevel)
 				.color(redRightTop, greenRightTop, blueRightTop, alphaRightTop);
@@ -87,10 +83,12 @@ public class FabricGuiUtils extends GuiUtils {
 
 		vertexBuffer.vertex((float) right, (float) bottom, zLevel)
 				.color(redRightBottom, greenRightBottom, blueRightBottom, alphaRightBottom);
+
+		bufferSource.draw();
 	}
 
 	@Override
 	public void setShaderColor(float r, float g, float b, float a) {
-		RenderSystem.setShaderColor(r, g, b, a);
+		// Color is handled directly through vertex data in MC 1.21.6
 	}
 }

@@ -6,6 +6,9 @@ import fr.atesab.customcursormod.common.cursor.CursorType;
 import fr.atesab.customcursormod.common.handler.*;
 import fr.atesab.customcursormod.common.utils.Color;
 import fr.atesab.customcursormod.common.utils.I18n;
+import fr.atesab.customcursormod.fabric.FabricCommonButton;
+import fr.atesab.customcursormod.fabric.FabricCommonScreen;
+import net.minecraft.client.gui.DrawContext;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -48,13 +51,19 @@ public class GuiConfigCursorMod extends CommonScreen.ScreenListener {
 		try {
 			BufferedImage image = ImageIO.read(cursorConfig.getResource());
 			int imageWidth = image.getWidth();
-			int imageHeight = image.getWidth(); // 单帧高度（正方形）
-			int totalImageHeight = image.getHeight(); // 图像总高度
+			int imageHeight = image.getWidth();
+			int totalImageHeight = image.getHeight();
 			var gutils = GuiUtils.get();
 			gutils.drawGradientRect(stack, getScreen().getBlitOffset(), posX, posY, posX + 20, posY + 20, -1072689136,
 					-804253680);
+			if (getScreen() instanceof FabricCommonScreen fabricCommonScreen) {
+				DrawContext drawContext = fabricCommonScreen.getHandle().getCurrentDrawContext();
+				if (drawContext != null) {
+					int bgColor = 0x80000000;
+					drawContext.fill(posX - 2, posY - 2, posX + 22, posY + 22, bgColor);
+				}
+			}
 			cursorConfig.getResourceLocation().setShaderTexture();
-			// 只渲染第一帧，参数：位置(posX,posY), UV(0,0), UV尺寸(imageWidth,imageHeight), 渲染尺寸(20,20), 纹理总尺寸(imageWidth,总高度)
 			gutils.drawScaledCustomSizeModalRect(posX, posY, 0, 0, imageWidth, imageHeight, 20, 20, imageWidth,
 					totalImageHeight, 0xffffffff, true);
 		} catch (Exception e) {

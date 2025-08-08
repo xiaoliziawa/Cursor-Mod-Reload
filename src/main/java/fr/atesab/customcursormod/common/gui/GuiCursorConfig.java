@@ -7,6 +7,9 @@ import fr.atesab.customcursormod.common.handler.*;
 import fr.atesab.customcursormod.common.utils.Color;
 import fr.atesab.customcursormod.common.utils.I18n;
 import fr.atesab.customcursormod.common.utils.MathHelper;
+import fr.atesab.customcursormod.fabric.FabricCommonScreen;
+import fr.atesab.customcursormod.fabric.FabricCommonTextField;
+import net.minecraft.client.gui.DrawContext;
 
 import java.awt.image.BufferedImage;
 import java.util.function.Consumer;
@@ -67,8 +70,20 @@ public class GuiCursorConfig extends CommonScreen.ScreenListener {
 				cursorSize.getYPosition() + cursorSize.getHeight() / 2 - gutils.fontHeight() / 2, Color.WHITE);
 		
 		if (syncImageSize()) {
+			// 绘制预览区域背景
 			gutils.drawGradientRect(stack, width / 2 + 36, height / 2 - 64, width / 2 + 164,
 					height / 2 + 64, -1072689136, -804253680, screen.getBlitOffset());
+
+			// 在预览区域周围绘制一个方框
+			if (screen instanceof FabricCommonScreen fabricCommonScreen) {
+				DrawContext drawContext = fabricCommonScreen.getHandle().getCurrentDrawContext();
+				if (drawContext != null) {
+					// 绘制黑色透明填充背景
+					int bgColor = 0x80000000; // 半透明黑色
+					drawContext.fill(width / 2 + 34, height / 2 - 66, width / 2 + 166, height / 2 + 66, bgColor);
+				}
+			}
+
 			cursorConfig.getResourceLocation().setShaderTexture();
 			
 			int currentSize = cursorConfig.getSize();

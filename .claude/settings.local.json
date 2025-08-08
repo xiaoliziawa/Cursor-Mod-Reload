@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:modmuss50.me)",
+      "WebFetch(domain:fabricmc.net)"
+    ],
+    "deny": []
+  }
+}

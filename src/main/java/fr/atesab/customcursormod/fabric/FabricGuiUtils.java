@@ -1,7 +1,11 @@
 package fr.atesab.customcursormod.fabric;
 
+import fr.atesab.customcursormod.common.CursorMod;
 import fr.atesab.customcursormod.common.handler.CommonMatrixStack;
+import fr.atesab.customcursormod.common.handler.CommonScreen;
 import fr.atesab.customcursormod.common.handler.GuiUtils;
+import fr.atesab.customcursormod.common.utils.Color;
+import fr.atesab.customcursormod.common.utils.I18n;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
@@ -90,6 +94,75 @@ public class FabricGuiUtils extends GuiUtils {
 	@Override
 	public void setShaderColor(float r, float g, float b, float a) {
 		// Color is handled directly through vertex data in MC 1.21.6
+	}
+
+	/**
+	 * 绘制预览区域及边框
+	 *
+	 * @param stack 矩阵堆栈
+	 * @param screen 屏幕实例
+	 * @param x 预览区域X坐标
+	 * @param y 预览区域Y坐标
+	 * @param width 预览区域宽度
+	 * @param height 预览区域高度
+	 */
+	public void drawPreviewArea(CommonMatrixStack stack, CommonScreen screen, int x, int y, int width, int height) {
+		// 绘制预览区域背景
+		drawGradientRect(stack, screen.getBlitOffset(), x, y, x + width, y + height,
+				-1072689136, -804253680);
+
+		// 在预览区域周围绘制一个方框
+		if (screen instanceof FabricCommonScreen fabricCommonScreen) {
+			DrawContext drawContext = fabricCommonScreen.getHandle().getCurrentDrawContext();
+			if (drawContext != null) {
+				// 绘制黑色透明填充背景
+				int bgColor = 0x80000000; // 半透明黑色
+				drawContext.fill(x - 2, y - 2, x + width + 2, y + height + 2, bgColor);
+			}
+		}
+	}
+
+	/**
+	 * 绘制游标热点
+	 *
+	 * @param stack 矩阵堆栈
+	 * @param screen 屏幕实例
+	 * @param x 热点X坐标
+	 * @param y 热点Y坐标
+	 */
+	public void drawCursorHotspot(CommonMatrixStack stack, CommonScreen screen, int x, int y) {
+		screen.drawCenterString(stack, "+", x, y - fontHeight() / 2, Color.WHITE);
+	}
+
+	/**
+	 * 绘制配置界面标题和信息
+	 *
+	 * @param stack 矩阵堆栈
+	 * @param screen 屏幕实例
+	 * @param width 屏幕宽度
+	 * @param height 屏幕高度
+	 */
+	public void drawConfigTitle(CommonMatrixStack stack, CommonScreen screen, int width, int height) {
+		screen.drawCenterString(stack, CursorMod.MOD_NAME, width / 2f, height / 2f - 60f, Color.ORANGE, 2.5F);
+
+		screen.drawRightString(stack, CursorMod.getInstance().getType().toString() + " - " + CursorMod.MOD_VERSION, width - 5,
+				height - fontHeight() * 3 - 9, 0xffffffff);
+		screen.drawRightString(stack, I18n.get("cursormod.licence", CursorMod.MOD_LICENCE), width - 5,
+				height - fontHeight() * 2 - 7, 0xffffffff);
+		screen.drawRightString(stack, I18n.get("cursormod.authors", CursorMod.MOD_AUTHORS), width - 5,
+				height - fontHeight() - 5, 0xffffffff);
+	}
+
+	/**
+	 * 绘制动画提示文字
+	 *
+	 * @param stack 矩阵堆栈
+	 * @param screen 屏幕实例
+	 * @param x 文字X中心坐标
+	 * @param y 文字Y坐标
+	 */
+	public void drawAnimationText(CommonMatrixStack stack, CommonScreen screen, int x, int y) {
+		screen.drawCenterString(stack, "(" + I18n.get("cursormod.gui.animate") + ")", x, y, Color.WHITE);
 	}
 
 	/**
